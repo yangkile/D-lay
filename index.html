@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>串流延迟检测</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        #fpsCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+<canvas id="fpsCanvas"></canvas>
+
+<script>
+    (function() {
+        const canvas = document.getElementById('fpsCanvas');
+        const context = canvas.getContext('2d');
+
+        let devicePixelRatio = window.devicePixelRatio || 1;
+        let backingStoreRatio = context.webkitBackingStorePixelRatio || 1;
+        let ratio = devicePixelRatio / backingStoreRatio;
+
+        context.scale(ratio,ratio);
+
+        let lastFrameTime = performance.now();
+        let frameCount = 0;
+        let fps = 0;
+        let lastNow = 0;
+        // Function to set canvas size and redraw FPS counter
+        function setCanvasSize() {
+            canvas.width = window.innerWidth * ratio; // Fixed width
+            canvas.height = window.innerHeight *ratio; // Fixed height
+            draw(fps); // Redraw with the new size
+        }
+
+
+        function updateFPS() {
+            let now = performance.now();
+            frameCount++;
+            let delta = now - lastFrameTime;
+
+            if (delta >= 1000) {
+                fps = frameCount;
+                frameCount = 0;
+                lastFrameTime = now;
+            }
+            draw(fps,now);
+
+            requestAnimationFrame(updateFPS);
+        }
+
+        function drawRoundedRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+
+        function draw(fps,now) {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            drawRoundedRect(context, 0, 0, canvas.width, canvas.height, 10);
+            context.fill();
+
+            // Set font size to 10% of the canvas width
+            const fontSize = canvas.width * 0.1;
+            context.font = `${fontSize}px Arial`;
+            context.fillStyle = 'white';
+            context.fillText('FPS: ' + fps, 10, fontSize * 0.8);
+            const time = new Date(now);
+            const formattedTime = time.getMilliseconds();
+            context.fillText('Time: ' + formattedTime, 10, fontSize *2 * 0.8);
+            context.fillText('Time Deviation: ' + (now-lastNow).toFixed(1), 10, fontSize *3 * 0.8);
+            context.fillText('', 10, fontSize *4 * 0.3);
+            lastNow = now;
+        }
+
+        // Adjust canvas size on window resize
+        window.addEventListener('resize', setCanvasSize);
+
+        setCanvasSize();
+        updateFPS();
+    })();
+</script>
+</body>
+</html>
