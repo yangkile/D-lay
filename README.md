@@ -1,5 +1,8 @@
 # D-lay
  串流时候检测延迟工具
+
+[在线预览](https://yangkile.github.io/D-lay/)
+
 ### FPS
 当前屏幕FPS
 ### Time:
